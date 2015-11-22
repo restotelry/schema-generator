@@ -36,6 +36,14 @@ class TypesGenerator
     const DOCTRINE_COLLECTION_USE = 'Doctrine\Common\Collections\ArrayCollection';
     /**
      * @var string
+     */
+    const FOS_USER_BUNDLE_NAMESPACE = 'FOS\UserBundle\Model\User';
+    /**
+     * @var string
+     */
+    const FOS_USER_BUNDLE_NAMESPACE_ALIAS = 'BaseUser';
+    /**
+     * @var string
      *
      * @see https://github.com/myclabs/php-enum Used enum implementation
      */
@@ -118,6 +126,7 @@ class TypesGenerator
             'parentHasConstructor' => false,
             'hasChild' => false,
             'abstract' => false,
+            'extendsFOSUser' => false,
         ];
 
         $typesToGenerate = [];
@@ -235,6 +244,16 @@ class TypesGenerator
 
             foreach ($class['fields'] as &$field) {
                 $field['isEnum'] = isset($classes[$field['range']]) && $classes[$field['range']]['isEnum'];
+            }
+
+            if (isset($config['types'][$class['name']]['extendsFOSUser'])) {
+                if (false === $class['parent']) {
+                    $configFOSNamespaceAlias = $config['types'][$class['name']]['extendsFOSUser']['namespaceAlias'];
+                    $class['parent'] = null !== $configFOSNamespaceAlias ? $configFOSNamespaceAlias : self::FOS_USER_BUNDLE_NAMESPACE_ALIAS;
+                    $class['uses'][] = sprintf('%s as %s', self::FOS_USER_BUNDLE_NAMESPACE, $class['parent']);
+                } else {
+                    $this->logger->error(sprintf('[extendsFOSUser] class "%s" already extends class "%s"', $class['name'], $class['parent']));
+                }
             }
         }
 
